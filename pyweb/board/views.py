@@ -1,20 +1,27 @@
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
 from board.forms import QuestionForm, AnswerForm
-from board.models import Question
+from board.models import Question, Answer
 
 
 def index(request):
     return render(request, 'board/index.html')
     # return HttpResponse("웹 메인페이지 입니다.")
 
+# 질문 목록
 def question_list(request):
     # question_list = Question.objects.all()
-    question_list = Question.objects.order_by('create_date')
-    context = {'question_list': question_list}
+    question_list = Question.objects.order_by('-create_date')    #내림 차순
+    # 페이지 처리
+    page = request.GET.get('page', '1')
+    paginator = Paginator(question_list, 10)    #페이지당 게시글 - 10
+    page_obj = paginator.get_page(page)
+
+    context = {'question_list': page_obj}
     return render(request, 'board/question_list.html', context)
 
 def detail(request, question_id):
@@ -60,6 +67,24 @@ def answer_create(request, question_id):
     context = {'question': question, 'form': form}
     return render(request, 'board/detail.html', context)
 
+# 질문 수정
+@login_required(login_url='common:login')
+def question_modify(request, question_id):
+    # 수정을 위해서 질문 1개 가져옴
+    question = get_object_or_404(Question, pk=question_id)
+    if request.method == "POST":
+        form = QuestionForm(request.POST, instance=question)
+        if form.is_valid():
+            form.save(commit=False) #커밋 아직 안됨
+            question.modify_date = timezone.now()   #수정일
+            question.author = request.user          #글쓴
+            question.save()
+            return redirect('board:detail', question_id=question.id)
+    else:
+        form = QuestionForm(instance=question)  #데이터가 이미 있는 폼
+    context = {'form': form}
+    return render(request, 'board/question_form.html', context)
+
 # 질문 삭제
 @login_required(login_url='common:login')   #로그인 안되어 있으면 페이지로 이동시킴
 def question_delete(request, question_id):
@@ -68,3 +93,10 @@ def question_delete(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
     question.delete()
     return redirect('board:question_list')
+
+# 답변 삭제
+@login_required(login_url='common:login')
+def answer_delete(reqeust, answer_id):
+    answer = get_object_or_404(Answer, pk=answer_id)
+    answer.delete()
+    return redirect('board:detail', question_id=answer.question.id)
