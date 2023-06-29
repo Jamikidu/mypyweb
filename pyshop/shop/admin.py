@@ -8,9 +8,10 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ['id', 'name', 'slug']
     prepopulated_fields = {'slug': ('name', )}
 
+# 상품 등록 방법1
 admin.site.register(Category, CategoryAdmin)
 
-# 상품 등록
+# 상품 등록 방법2
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ['id', 'name', 'slug', 'category', 'price',
