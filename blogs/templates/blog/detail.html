@@ -3,27 +3,69 @@
 {% endblock %}
 {% block content %}
 <div class="container my-3">
-        <section id="detail">
-            {% if post.category %}
+    <div class="row">
+        <div class="col-8">
+            <section id="detail">
+                {% if post.category %}
                 <h5 class="text-end">[{{ post.category }}]</h5>
-            {% endif %}
-        <h3>{{ post.title }}</h3>
-        <h5 style="white-space: pre-line; line-height: 1.5em">
-                {{ post.content }}</h5>
-        <p>글쓴이: {{ post.author }}, (작성일:{{ post.pub_date }})</p>
-        {% if post.photo %}
+                {% endif %}
+                <h3>{{ post.title }}</h3>
+                <h5 style="white-space: pre-line; line-height: 1.5em">
+                    {{ post.content }}</h5>
+                <p>글쓴이: {{ post.author }}, (작성일:{{ post.pub_date }})</p>
+                {% if post.photo %} <!-- 이미지 파일이 있으면 -->
                 <img src="{{ post.photo.url }}">
-        {% endif %}
-        </section>
-        <aside id="category">
-        <h4>분류(Category)</h4>
-        <div>
-            <ul>
-                {% for category in categories %}
-                    <li> {{ category.name }}({{ category.post_set.count }})</li>
-                {% endfor %}
-            </ul>
+                {% endif %}
+                {% if post.file %}  <!-- 파일이 있으면! -->
+                <p>
+                    <a href="{{ post.file.url }}" class="btn btn-outline-dark">Download:
+                        {% if post.get_file_ext == 'csv' %}
+                        <i class="fa-solid fa-file-csv"></i>
+                        {% elif post.get_file_ext == 'xlsx' or post.get_file_ext == 'xls'%}
+                        <i class="fa-solid fa-file-excel"></i>
+                        {% else %}  <!--Font Awesome 에서 다운받은 무료서식-->
+                        <i class="fa-solid fa-file"></i>
+                        {% endif %}
+                        {{ post.get_file_name }}</a>
+                </p>
+                {% endif %}
+
+            </section>
         </div>
-    </aside>
+        <div class="col-4 col-lg-3">
+            <div class="card my-3">
+                <h4 class="card-header">분류(Category)</h4>
+                <div class="card-body">
+                    <ul>
+                        <li>
+                            <a href="{% url 'blog:post_list' %}">
+                                {% if not current_category %}
+                                <b>전체보기({{ total_post }})</b>
+                                {% else %}
+                                전체보기({{ total_post }})
+                                {% endif %}
+                            </a>
+                        </li>
+                        {% for category in categories %}
+                        {% if current_category.slug == category.slug %}
+                        <!--&lt;!&ndash; category.post_set.count : 포스트의 총 갯수&ndash;&gt;-->
+                        <li style="background: #ff0">
+                            <a href="{{ category.get_absolute_url }}">
+                                {{ category.name }}({{ category.post_set.count }})
+                            </a>
+                        </li>
+                        {% else %}
+                        <li>
+                            <a href="{{ category.get_absolute_url }}">
+                                {{ category.name }}({{ category.post_set.count }})
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>  <!-- 카드 끝 -->
+        </div>  <!-- 카테고리 끝 -->
+    </div>
 </div>
 {% endblock %}

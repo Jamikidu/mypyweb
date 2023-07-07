@@ -1,5 +1,8 @@
+import os.path
+
 from django.contrib.auth.models import User
 from django.db import models
+from django.urls import reverse
 
 
 # 카테고리 모델
@@ -15,7 +18,9 @@ class Category(models.Model):
 
     # 카테고리 url 주소
     def get_absolute_url(self):
-        return f'/blog/category/{self.slug}'
+        # return f'/blog/category/{self.slug}'  #절대 경로
+        # reverse() - redirect와 유사: app-name으로 경로 이동
+        return reverse('blog:category_page', args=[self.slug])
 
     # 관리자 페이지에서 적용
     class Meta:
@@ -34,9 +39,21 @@ class Post(models.Model):
     modify_date = models.DateTimeField(null=True, blank=True)   #입력 폼이 비어도 됨 - 수정일
     photo = models.ImageField(upload_to='blog/images/%Y/%m/%d/',
                               null=True, blank=True)    #null 허용, 파일을 첨부하지 않을때도 OK
+    file = models.FileField(upload_to='blog/files/%Y/%m/%d/',
+                            null=True, blank=True)
     # 카테고리가 삭제되어도 카테고리가 없는 포스트는 유지
     category = models.ForeignKey(Category, null=True, blank=True,
                                  on_delete=models.SET_NULL)
 
     def __str__(self):
         return self.title
+
+    # 파일의 이름을 출력하는 메서드
+    def get_file_name(self):
+        return os.path.basename(self.file.name)
+
+    # 파일의 확장자 구분
+    def get_file_ext(self):
+        # seoul.csv ->split() -> [seoul, csv]
+        return self.get_file_name().split('.')[-1]
+
