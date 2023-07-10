@@ -1,9 +1,8 @@
 @charset 'utf-8';
 
 a{text-decoration: none;}
-
-/* post_list 스타일 */
-
-/* detail 스타일 */
-
-/* 카테고리 스타일 */
+.comment{
+    border-top: 2px dotted #ccc;
+    padding: 10px 5px;
+    font_size: 0.9em;
+}

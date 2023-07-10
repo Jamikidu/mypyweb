@@ -1,71 +1,80 @@
 {% extends 'base.html' %}
-{% block title %}상세 내용입니다
+{% block title %}포스트 상세 내용입니다.
 {% endblock %}
 {% block content %}
-<div class="container my-3">
-    <div class="row">
-        <div class="col-8">
-            <section id="detail">
-                {% if post.category %}
-                <h5 class="text-end">[{{ post.category }}]</h5>
-                {% endif %}
-                <h3>{{ post.title }}</h3>
-                <h5 style="white-space: pre-line; line-height: 1.5em">
-                    {{ post.content }}</h5>
-                <p>글쓴이: {{ post.author }}, (작성일:{{ post.pub_date }})</p>
-                {% if post.photo %} <!-- 이미지 파일이 있으면 -->
-                <img src="{{ post.photo.url }}">
-                {% endif %}
-                {% if post.file %}  <!-- 파일이 있으면! -->
-                <p>
-                    <a href="{{ post.file.url }}" class="btn btn-outline-dark">Download:
-                        {% if post.get_file_ext == 'csv' %}
-                        <i class="fa-solid fa-file-csv"></i>
-                        {% elif post.get_file_ext == 'xlsx' or post.get_file_ext == 'xls'%}
-                        <i class="fa-solid fa-file-excel"></i>
-                        {% else %}  <!--Font Awesome 에서 다운받은 무료서식-->
-                        <i class="fa-solid fa-file"></i>
-                        {% endif %}
-                        {{ post.get_file_name }}</a>
-                </p>
-                {% endif %}
+    {% if post.category %}
+        <h6 class="text-end">[{{ post.category }}]</h6>
+    {% endif %}
+    <h3>{{ post.title }}</h3>
+    <h5 style="white-space: pre-line; line-height: 1.5">
+        {{ post.content }}
+    </h5>
+    <p>글쓴이: {{ post.author }} (작성일: {{ post.pub_date }})</p>
+    <!-- 이미지 파일이 있으면 보이기 -->
+    {% if post.photo %}
+        <img src="{{ post.photo.url }}">
+    {% endif %}
+    <!-- 파일이 있으면 보이기 -->
+    {% if post.file %}
+    <p>
+        <a href="{{ post.file.url }}" class="btn btn-outline-dark">
+            Download:
+            {% if post.get_file_ext == 'csv' %}
+                <i class="fa-solid fa-file-csv"></i>
+            {% elif post.get_file_ext == 'xlsx' or post.get_file_ext == 'xls' %}
+                <i class="fa-solid fa-file-excel"></i>
+            {% else %}
+                <i class="fa-solid fa-file"></i>
+            {% endif %}
+        {{ post.get_file_name }}</a>
+    </p>
+    {% endif %}
 
-            </section>
+    <!-- 댓글 영역 -->
+    <div class="mt-3">
+        <h5><i class="fa-solid fa-pen"></i> 댓글엽엽</h5>
+        {% for comment in post.comment_set.all %}
+        <div class="comment text-muted">
+            <span>{{ comment.content|linebreaks }}</span>
+            <span>- {{ comment.author }} - 작성일: {{ comment.pub_date }}</span>
+            {% if comment.modify_date%} <!-- 수정일이 있다면 -->
+            <span> ( 수정일: {{ comment.modify_date }} )</span>
+            {% endif %}
+            <!-- 댓글 수정, 삭제 -->
+            {% if comment.author == request.user %}
+            <a href="{% url 'blog:comment_modify' comment.id %}">수정</a>
+            <a href="#" class="delete"
+                data-uri="{% url 'blog:comment_delete' comment.id %}">삭제</a>
+            {% endif %}
         </div>
-        <div class="col-4 col-lg-3">
-            <div class="card my-3">
-                <h4 class="card-header">분류(Category)</h4>
-                <div class="card-body">
-                    <ul>
-                        <li>
-                            <a href="{% url 'blog:post_list' %}">
-                                {% if not current_category %}
-                                <b>전체보기({{ total_post }})</b>
-                                {% else %}
-                                전체보기({{ total_post }})
-                                {% endif %}
-                            </a>
-                        </li>
-                        {% for category in categories %}
-                        {% if current_category.slug == category.slug %}
-                        <!--&lt;!&ndash; category.post_set.count : 포스트의 총 갯수&ndash;&gt;-->
-                        <li style="background: #ff0">
-                            <a href="{{ category.get_absolute_url }}">
-                                {{ category.name }}({{ category.post_set.count }})
-                            </a>
-                        </li>
-                        {% else %}
-                        <li>
-                            <a href="{{ category.get_absolute_url }}">
-                                {{ category.name }}({{ category.post_set.count }})
-                            </a>
-                        </li>
-                        {% endif %}
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>  <!-- 카드 끝 -->
-        </div>  <!-- 카테고리 끝 -->
+        {% endfor %}
     </div>
-</div>
+    <!-- 댓글 등록 폼 -->
+    <div>
+        <form action="{% url 'blog:comment_create' post.id %}" method="post">
+            {% csrf_token %}
+            {% include 'form_errors.html' %}
+            <div class="form-group">
+                <label for="content">댓글 내용</label>
+                <textarea name="content" rows="3" id="content"
+                          placeholder="댓글을 남겨보세요" class="form-control my-3" style="resize:none;"
+                          ></textarea>
+                <button type="submit" class="btn btn-sm btn-outline-success">등록</button>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function(){
+        // 삭제 처리
+        $(".delete").click(function(){
+            if(confirm('정말로 삭제하시겠습니까?')){
+                location.href=$(this).data('uri');
+            }
+        });
+    });
+
+</script>
 {% endblock %}

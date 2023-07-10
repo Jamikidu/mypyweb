@@ -57,3 +57,12 @@ class Post(models.Model):
         # seoul.csv ->split() -> [seoul, csv]
         return self.get_file_name().split('.')[-1]
 
+# 댓글 모델
+class Comment(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    pub_date = models.DateTimeField()
+    modify_date = models.DateTimeField(null=True, blank=True)
+    # 게시글이 부모키, 댓글이 자식키(외래키)
+    post = models.ForeignKey(Post, null=True, blank=True,
+                             on_delete=models.CASCADE)
